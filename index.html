@@ -2,39 +2,252 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Галерея товаров</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.js"></script>
   <style>
-    /* ... (весь твой CSS без изменений) ... */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: #f8f9fa; padding: 20px; }
+    #filter-container { margin-bottom: 20px; }
+    #model-description { font-size: 1em; color: #333; margin-bottom: 25px; }
+    #gallery {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+      max-width: 1200px; margin: 0 auto;
+    }
+    .product {
+      background: #fff; border-radius: 5px; box-shadow: 0px 4px 8px rgba(0,0,0,0.1);
+      padding: 7px; text-align: center; overflow: hidden; transition: 0.3s ease;
+      position: relative;
+    }
+    .product:hover {
+      transform: translateY(-5px); box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.15);
+    }
+    .product h3 { font-size: 1.2em; margin: 10px 0; }
+    .product p { font-size: 1em; color: #333; }
+    .swiper-container {
+      width: 100%; height: 250px; border-radius: 5px; overflow: hidden;
+      display: flex; align-items: center; justify-content: center; position: relative;
+    }
+    .swiper-slide { display: flex; align-items: center; justify-content: center; }
+    .swiper-slide img {
+      width: 100%; height: 100%; object-fit: contain; background: #fff;
+      cursor: pointer;
+    }
+    .swiper-button-next, .swiper-button-prev {
+      color: rgba(255,255,255,0.65); background: none; width: 30px; height: 30px;
+    }
+    .swiper-button-next::after, .swiper-button-prev::after { font-size: 18px; }
+    .swiper-pagination-bullet {
+      width: 4px; height: 4px; background: rgba(255, 255, 255, 0.65); opacity: 1;
+    }
+    .swiper-pagination-bullet-active { background: rgba(255, 255, 255, 0.95); }
+    .swiper-button-next { right: 10px; left: unset; }
+    .swiper-button-prev { left: 10px; right: unset; }
+    @media (max-width: 1024px) {
+      #gallery { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 768px) {
+      #gallery {
+        grid-template-columns: 1fr; justify-content: center;
+        display: flex; flex-direction: column; align-items: center;
+      }
+      .product { width: 95%; }
+    }
+    .no-products {
+      text-align: center; font-size: 1em; color: #777; margin-top: 50px;
+    }
+    .sold-label {
+      position: absolute; top: 10px; left: 10px;
+      background-color: rgba(255, 0, 0, 0.9); color: white;
+      padding: 5px 10px; font-size: 0.85em; font-weight: bold;
+      border-radius: 4px; z-index: 10;
+    }
+    #modal {
+      display: none; position: fixed; top: 0; left: 0;
+      width: 100vw; height: 100vh; background-color: rgba(0,0,0,0.9);
+      justify-content: center; align-items: center; z-index: 9999;
+      flex-direction: column;
+    }
+    #modal .swiper-container { width: 90%; height: 80vh; }
+    #modal .swiper-slide img {
+      max-height: 100%; max-width: 100%; object-fit: contain;
+    }
+    #modal-close {
+      color: white; font-size: 24px; cursor: pointer; margin-bottom: 10px;
+      background: none; border: 2px solid white; padding: 5px 15px;
+      border-radius: 5px;
+    }
+    .share-arrow {
+      position: absolute; bottom: 10px; right: 10px;
+      background-color: transparent; color: #808080; /* Серый цвет */
+      font-size: 20px; font-weight: bold; cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+    .share-arrow:hover {
+      transform: scale(1.2);
+    }
   </style>
 </head>
 <body>
-  <div id="app">
-    <div id="filter-container">
-      <label for="product-filter">Выберите модель:</label>
-      <select id="product-filter"><option value="all">Все модели</option></select>
-    </div>
-    <div id="model-description"></div>
-    <div id="gallery"></div>
-    <div id="no-products" class="no-products" style="display: none;">
-      Если не нашли нужной коляски, напишите нам в Telegram:
-      <a href="https://t.me/kolyaski_tutis_bu" target="_blank">https://t.me/kolyaski_tutis_bu</a>
-    </div>
-    <div id="modal">
-      <button id="modal-close">Закрыть</button>
-      <div class="swiper-container" id="modal-swiper">
-        <div class="swiper-wrapper"></div>
-        <div class="swiper-pagination"></div>
-        <div class="swiper-button-next"></div>
-        <div class="swiper-button-prev"></div>
-      </div>
+  <div id="filter-container">
+    <label for="product-filter">Выберите модель:</label>
+    <select id="product-filter"><option value="all">Все модели</option></select>
+  </div>
+  <div id="model-description"></div>
+  <div id="gallery"></div>
+  <div id="no-products" class="no-products" style="display: none;">
+    Если не нашли нужной коляски, напишите нам в Telegram:
+    <a href="https://t.me/kolyaski_tutis_bu" target="_blank">https://t.me/kolyaski_tutis_bu</a>
+  </div>
+  <div id="modal">
+    <button id="modal-close">Закрыть</button>
+    <div class="swiper-container" id="modal-swiper">
+      <div class="swiper-wrapper"></div>
+      <div class="swiper-pagination"></div>
+      <div class="swiper-button-next"></div>
+      <div class="swiper-button-prev"></div>
     </div>
   </div>
-
   <script>
-    // ... (весь твой JavaScript без изменений) ...
+    const API_URL = "https://myshop-backend2.onrender.com/products";
+    const descriptions = {
+      "tutis uno": "Tutis Uno – коляска с термолюлькой.",
+      "tutis nanni": "Tutis Nanni – компактная коляска, очень проходимая и с глубокой люлькой.",
+      "tutis zille": "Tutis Zille – термолюлька, четыре амортизатора, нижняя сумка на замке из экокожи.",
+      "tutis mio": "Tutis Mio – одна из самых легких моделей.",
+      "tutis viva": "Tutis Viva – премиум коляска в линейке Tutis.",
+      "tutis mimi": "Tutis Mimi Style – похожа на модель Nanni, но с четырьмя амортизаторами.",
+      "tutis novo": "Tutis Novo – очень легкая коляска, отлично подойдёт на весну и лето.",
+      "tutis leo": "Tutis Leo – ещё одна облегчённая модель."
+    };
+    let allProducts = [];
+    let modalSwiper;
+    async function fetchProducts() {
+      const res = await fetch(API_URL);
+      allProducts = await res.json();
+      generateFilterOptions(allProducts);
+      renderProducts(allProducts);
+    }
+    function generateFilterOptions(products) {
+      const select = document.getElementById('product-filter');
+      const modelNames = new Set();
+      products.forEach(product => {
+        if (product.visible) {
+          const words = product.name.trim().toLowerCase().split(/\s+/);
+          if (words.length >= 2) modelNames.add(`${words[0]} ${words[1]}`);
+        }
+      });
+      const sortedModels = Array.from(modelNames).sort();
+      select.innerHTML = '<option value="all">Все модели</option>';
+      sortedModels.forEach(model => {
+        const displayName = model.split(' ').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
+        select.innerHTML += `<option value="${model}">${displayName}</option>`;
+      });
+    }
+    function filterProducts(products, filter) {
+      const visible = products.filter(p => p.visible);
+      if (filter === "all") return visible;
+      return visible.filter(product => {
+        const words = product.name.trim().toLowerCase().split(/\s+/);
+        return words.length >= 2 && `${words[0]} ${words[1]}` === filter.toLowerCase();
+      });
+    }
+    function openModal(images) {
+      const modal = document.getElementById('modal');
+      const wrapper = document.querySelector('#modal-swiper .swiper-wrapper');
+      wrapper.innerHTML = '';
+      images.forEach(img => {
+        const slide = document.createElement('div');
+        slide.classList.add('swiper-slide');
+        slide.innerHTML = `<img src="${img}" alt="">`;
+        wrapper.appendChild(slide);
+      });
+      modal.style.display = 'flex';
+      if (modalSwiper) modalSwiper.destroy(true, true);
+      modalSwiper = new Swiper('#modal-swiper', {
+        loop: true,
+        navigation: {
+          nextEl: '.swiper-button-next',
+          prevEl: '.swiper-button-prev'
+        },
+        pagination: {
+          el: '.swiper-pagination',
+          clickable: true
+        }
+      });
+    }
+    function renderProducts(products) {
+      const filter = document.getElementById("product-filter").value;
+      const filtered = filterProducts(products, filter);
+      const gallery = document.getElementById("gallery");
+      const noProducts = document.getElementById("no-products");
+      const modelDescription = document.getElementById("model-description");
+      gallery.innerHTML = "";
+      modelDescription.textContent = descriptions[filter.toLowerCase()] || "";
+      noProducts.style.display = filtered.length === 0 ? "block" : "none";
+      filtered.forEach(product => {
+        const isSold = /Продана/i.test(product.description);
+        const productId = product._id || product.id || product.name.replace(/\s+/g, '-').toLowerCase();
+        const div = document.createElement("div");
+        div.classList.add("product");
+        div.id = `product-${productId}`;
+        div.innerHTML = `
+          <div class="swiper-container">
+            ${isSold ? `<div class="sold-label">Продана</div>` : ""}
+            <div class="swiper-wrapper">
+              ${product.images.map(img => `<div class="swiper-slide"><img src="${img}" /></div>`).join('')}
+            </div>
+            <div class="swiper-pagination"></div>
+            <div class="swiper-button-next"></div>
+            <div class="swiper-button-prev"></div>
+          </div>
+          <h3>${product.name}</h3>
+          <p>${product.description} ${product.link ? `<a href="${product.link}" target="_blank" style="color:#608fb9;font-weight:bold;margin-left:8px;">Подробнее</a>` : ''}</p>
+          <p>Цена: ${product.price} ₽</p>
+          <div class="share-arrow">&#8594;</div>
+        `;
+        gallery.appendChild(div);
+        new Swiper(div.querySelector('.swiper-container'), {
+          loop: true,
+          pagination: { el: div.querySelector('.swiper-pagination'), clickable: true },
+          navigation: { nextEl: div.querySelector('.swiper-button-next'), prevEl: div.querySelector('.swiper-button-prev') }
+        });
+        div.querySelectorAll('img').forEach(img => {
+          img.addEventListener('click', () => openModal(product.images));
+        });
+        div.querySelector('.share-arrow').addEventListener('click', () => {
+          const url = new URL(window.location.href);
+          url.hash = `product-${productId}`;
+          navigator.clipboard.writeText(url.toString()).then(() => alert('Ссылка скопирована в буфер обмена!'));
+        });
+      });
+    }
+    document.getElementById("product-filter").addEventListener("change", () => {
+      renderProducts(allProducts);
+    });
+    document.getElementById('modal-close').addEventListener('click', () => {
+      document.getElementById('modal').style.display = 'none';
+    });
+    fetchProducts().then(() => {
+      const hash = window.location.hash;
+      if (hash.startsWith('#product-')) {
+        const tryScrollToProduct = () => {
+          const productEl = document.querySelector(hash);
+          if (productEl) {
+            productEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            const imgs = [...productEl.querySelectorAll('img')].map(img => img.src);
+            if (imgs.length > 0) setTimeout(() => openModal(imgs), 400);
+            return true;
+          }
+          return false;
+        };
+        const interval = setInterval(() => {
+          if (tryScrollToProduct()) clearInterval(interval);
+        }, 300);
+        setTimeout(() => clearInterval(interval), 5000);
+      }
+    });
   </script>
 </body>
 </html>
