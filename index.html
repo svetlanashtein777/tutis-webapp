@@ -3,71 +3,108 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Магазин</title>
+  <title>Каталог товаров</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.js"></script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
   <style>
     body {
       margin: 0;
-      padding: 20px;
+      padding: 0;
       background: #f7f8fa;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-    h1 {
       text-align: center;
+      color: #222;
     }
-    #product-filter {
-      display: block;
-      margin: 10px auto;
+
+    h1, h3 {
+      margin: 10px 0;
+    }
+
+    select {
+      margin: 10px;
       padding: 8px;
+      border-radius: 6px;
       font-size: 16px;
     }
+
+    .swiper-container {
+      width: 100%;
+      max-width: 400px;
+      margin: 0 auto;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .swiper-slide img {
+      width: 100%;
+      height: auto;
+      display: block;
+      object-fit: contain;
+    }
+
     .product {
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      padding: 16px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.08);
       margin: 20px auto;
-      max-width: 500px;
-      background: #fff;
+      padding: 15px;
+      max-width: 440px;
     }
-    .product img {
-      max-width: 100%;
-      border-radius: 10px;
-      cursor: pointer;
-    }
-    .sold-label {
-      position: absolute;
-      background: red;
-      color: white;
-      padding: 4px 8px;
-      font-weight: bold;
-      top: 10px;
-      left: 10px;
-      border-radius: 5px;
-    }
-    button.buy-btn {
+
+    .buy-btn {
       margin-top: 10px;
-      padding: 10px 20px;
+      padding: 10px 16px;
       background: #007aff;
       color: white;
       border: none;
-      border-radius: 5px;
+      border-radius: 6px;
       cursor: pointer;
-      font-size: 16px;
+      font-size: 1em;
+      width: 90%;
+      max-width: 300px;
     }
-    button.buy-btn:hover {
+
+    .buy-btn:hover {
       background: #005fcc;
     }
-    .share-arrow {
-      text-align: right;
-      font-size: 20px;
-      cursor: pointer;
-      margin-top: 10px;
+
+    .sold-label {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: red;
+      color: white;
+      padding: 5px 10px;
+      font-size: 14px;
+      border-radius: 5px;
     }
-    #no-products {
-      text-align: center;
-      color: #999;
+
+    .share-arrow {
+      font-size: 20px;
+      margin-top: 5px;
+      cursor: pointer;
+      color: #aaa;
+    }
+
+    @media (max-width: 480px) {
+      .product {
+        padding: 10px;
+        margin: 15px 10px;
+      }
+
+      h1 {
+        font-size: 20px;
+      }
+
+      h3 {
+        font-size: 18px;
+      }
+
+      .buy-btn {
+        font-size: 0.95em;
+      }
     }
   </style>
 </head>
@@ -75,38 +112,52 @@
   <h1>Каталог товаров</h1>
   <select id="product-filter">
     <option value="">Все категории</option>
-    <option value="кольцо">Кольца</option>
-    <option value="серьги">Серьги</option>
-    <option value="браслет">Браслеты</option>
-    <!-- добавь свои категории -->
   </select>
   <div id="model-description"></div>
   <div id="gallery"></div>
-  <div id="no-products" style="display:none;">Нет товаров для отображения.</div>
+  <p id="no-products" style="display:none;">Нет доступных товаров</p>
+
+  <!-- Modal для изображений (можно доработать позже) -->
+  <div id="modal" style="display:none;">
+    <div id="modal-close">×</div>
+    <div id="modal-content"></div>
+  </div>
 
   <script>
     const API_URL = "https://myshop-backend2.onrender.com/products";
     const descriptions = {
-      кольцо: "Описание категории Кольца...",
-      серьги: "Описание категории Серьги...",
-      браслет: "Описание категории Браслеты...",
+      "тутис": "Коляски Tutis — комфорт, стиль и надёжность.",
+      "анекс": "Коляски Anex — инновационный дизайн и качество.",
+      "camarelo": "Коляски Camarelo — легкость и практичность.",
     };
+
     let allProducts = [];
 
     async function fetchProducts() {
       const res = await fetch(API_URL);
       allProducts = await res.json();
+      generateFilterOptions(allProducts);
       renderProducts(allProducts);
+    }
+
+    function generateFilterOptions(products) {
+      const select = document.getElementById("product-filter");
+      const categories = new Set(products.map(p => p.category).filter(Boolean));
+      categories.forEach(cat => {
+        const option = document.createElement("option");
+        option.value = cat;
+        option.textContent = cat;
+        select.appendChild(option);
+      });
     }
 
     function filterProducts(products, filter) {
       if (!filter) return products;
-      return products.filter(p => p.name.toLowerCase().includes(filter.toLowerCase()));
+      return products.filter(p => p.category === filter);
     }
 
     function openModal(images) {
-      const modal = window.open("", "_blank");
-      modal.document.write(images.map(img => `<img src="${img}" style="max-width:100%;margin:10px;">`).join(""));
+      // временно отключено
     }
 
     function renderProducts(products) {
@@ -128,7 +179,7 @@
         div.classList.add("product");
         div.id = `product-${productId}`;
         div.innerHTML = `
-          <div class="swiper-container">
+          <div class="swiper-container" style="position:relative;">
             ${isSold ? `<div class="sold-label">Продана</div>` : ""}
             <div class="swiper-wrapper">
               ${product.images.map(img => `<div class="swiper-slide"><img src="${img}" /></div>`).join('')}
@@ -138,9 +189,9 @@
             <div class="swiper-button-prev"></div>
           </div>
           <h3>${product.name}</h3>
-          <p>${product.description} ${product.link ? `<a href="${product.link}" target="_blank">Подробнее</a>` : ''}</p>
-          <p><b>Цена:</b> ${product.price} ₽</p>
-          <div class="share-arrow">→</div>
+          <p>${product.description} ${product.link ? `<a href="${product.link}" target="_blank" style="color:#608fb9;font-weight:bold;margin-left:8px;">Подробнее</a>` : ''}</p>
+          <p>Цена: ${product.price} ₽</p>
+          <div class="share-arrow">&#8594;</div>
         `;
 
         if (!isSold) {
@@ -153,7 +204,7 @@
               price: product.price,
               id: productId
             });
-            if (Telegram.WebApp) {
+            if (window.Telegram && Telegram.WebApp) {
               Telegram.WebApp.sendData(payload);
             } else {
               alert("Telegram WebApp API недоступен.");
@@ -183,7 +234,7 @@
         div.querySelector('.share-arrow').addEventListener('click', () => {
           const url = new URL(window.location.href);
           url.hash = `product-${productId}`;
-          navigator.clipboard.writeText(url.toString()).then(() => alert('Ссылка скопирована!'));
+          navigator.clipboard.writeText(url.toString()).then(() => alert('Ссылка скопирована в буфер обмена!'));
         });
       });
     }
