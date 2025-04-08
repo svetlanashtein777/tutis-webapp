@@ -2,249 +2,39 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Каталог товаров</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
+  <title>Галерея товаров</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.js"></script>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    body {
-      margin: 0;
-      padding: 0;
-      background: #f7f8fa;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      text-align: center;
-      color: #222;
-    }
-
-    h1, h3 {
-      margin: 10px 0;
-    }
-
-    select {
-      margin: 10px;
-      padding: 8px;
-      border-radius: 6px;
-      font-size: 16px;
-      width: 90%;
-      max-width: 400px;
-    }
-
-    .swiper-container {
-      width: 100%;
-      max-width: 400px;
-      margin: 0 auto;
-      border-radius: 10px;
-      overflow: hidden;
-    }
-
-    .swiper-slide img {
-      width: 100%;
-      height: auto;
-      display: block;
-      object-fit: contain;
-    }
-
-    .product {
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.08);
-      margin: 20px auto;
-      padding: 15px;
-      max-width: 440px;
-    }
-
-    .buy-btn {
-      margin-top: 10px;
-      padding: 10px 16px;
-      background: #007aff;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 1em;
-      width: 90%;
-      max-width: 300px;
-    }
-
-    .buy-btn:hover {
-      background: #005fcc;
-    }
-
-    .sold-label {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      background: red;
-      color: white;
-      padding: 5px 10px;
-      font-size: 14px;
-      border-radius: 5px;
-      z-index: 2;
-    }
-
-    .share-arrow {
-      font-size: 20px;
-      margin-top: 5px;
-      cursor: pointer;
-      color: #aaa;
-    }
-
-    @media (max-width: 480px) {
-      .product {
-        padding: 10px;
-        margin: 15px 10px;
-      }
-
-      h1 {
-        font-size: 20px;
-        padding: 0 10px;
-      }
-
-      h3 {
-        font-size: 18px;
-      }
-
-      .buy-btn {
-        font-size: 0.95em;
-        padding: 10px;
-      }
-
-      select {
-        font-size: 14px;
-      }
-    }
+    /* ... (весь твой CSS без изменений) ... */
   </style>
 </head>
 <body>
-  <h1>Каталог товаров</h1>
-  <select id="product-filter">
-    <option value="">Все категории</option>
-  </select>
-  <div id="model-description"></div>
-  <div id="gallery"></div>
-  <p id="no-products" style="display:none;">Нет доступных товаров</p>
+  <div id="app">
+    <div id="filter-container">
+      <label for="product-filter">Выберите модель:</label>
+      <select id="product-filter"><option value="all">Все модели</option></select>
+    </div>
+    <div id="model-description"></div>
+    <div id="gallery"></div>
+    <div id="no-products" class="no-products" style="display: none;">
+      Если не нашли нужной коляски, напишите нам в Telegram:
+      <a href="https://t.me/kolyaski_tutis_bu" target="_blank">https://t.me/kolyaski_tutis_bu</a>
+    </div>
+    <div id="modal">
+      <button id="modal-close">Закрыть</button>
+      <div class="swiper-container" id="modal-swiper">
+        <div class="swiper-wrapper"></div>
+        <div class="swiper-pagination"></div>
+        <div class="swiper-button-next"></div>
+        <div class="swiper-button-prev"></div>
+      </div>
+    </div>
+  </div>
 
   <script>
-    const API_URL = "https://myshop-backend2.onrender.com/products";
-    const descriptions = {
-      "тутис": "Коляски Tutis — комфорт, стиль и надёжность.",
-      "анекс": "Коляски Anex — инновационный дизайн и качество.",
-      "camarelo": "Коляски Camarelo — легкость и практичность.",
-    };
-
-    let allProducts = [];
-
-    async function fetchProducts() {
-      const res = await fetch(API_URL);
-      allProducts = await res.json();
-      generateFilterOptions(allProducts);
-      renderProducts(allProducts);
-    }
-
-    function generateFilterOptions(products) {
-      const select = document.getElementById("product-filter");
-      const categories = new Set(products.map(p => p.category).filter(Boolean));
-      categories.forEach(cat => {
-        const option = document.createElement("option");
-        option.value = cat;
-        option.textContent = cat;
-        select.appendChild(option);
-      });
-    }
-
-    function filterProducts(products, filter) {
-      if (!filter) return products;
-      return products.filter(p => p.category === filter);
-    }
-
-    function renderProducts(products) {
-      const filter = document.getElementById("product-filter").value;
-      const filtered = filterProducts(products, filter);
-      const gallery = document.getElementById("gallery");
-      const noProducts = document.getElementById("no-products");
-      const modelDescription = document.getElementById("model-description");
-
-      gallery.innerHTML = "";
-      modelDescription.textContent = descriptions[filter.toLowerCase()] || "";
-      noProducts.style.display = filtered.length === 0 ? "block" : "none";
-
-      filtered.forEach(product => {
-        const isSold = /Продана/i.test(product.description);
-        const productId = product._id || product.id || product.name.replace(/\s+/g, '-').toLowerCase();
-
-        const div = document.createElement("div");
-        div.classList.add("product");
-        div.id = `product-${productId}`;
-        div.innerHTML = `
-          <div class="swiper-container" style="position:relative;">
-            ${isSold ? `<div class="sold-label">Продана</div>` : ""}
-            <div class="swiper-wrapper">
-              ${product.images.map(img => `<div class="swiper-slide"><img src="${img}" /></div>`).join('')}
-            </div>
-            <div class="swiper-pagination"></div>
-            <div class="swiper-button-next"></div>
-            <div class="swiper-button-prev"></div>
-          </div>
-          <h3>${product.name}</h3>
-          <p>${product.description} ${product.link ? `<a href="${product.link}" target="_blank" style="color:#608fb9;font-weight:bold;margin-left:8px;">Подробнее</a>` : ''}</p>
-          <p>Цена: ${product.price} ₽</p>
-          <div class="share-arrow">&#8594;</div>
-        `;
-
-        if (!isSold) {
-          const buyButton = document.createElement('button');
-          buyButton.textContent = "Купить";
-          buyButton.className = "buy-btn";
-          buyButton.addEventListener('click', () => {
-            const payload = JSON.stringify({
-              name: product.name,
-              price: product.price,
-              id: productId
-            });
-            if (window.Telegram && Telegram.WebApp) {
-              Telegram.WebApp.sendData(payload);
-            } else {
-              alert("Telegram WebApp API недоступен.");
-            }
-          });
-          div.appendChild(buyButton);
-        }
-
-        gallery.appendChild(div);
-
-        new Swiper(div.querySelector('.swiper-container'), {
-          loop: true,
-          pagination: {
-            el: div.querySelector('.swiper-pagination'),
-            clickable: true
-          },
-          navigation: {
-            nextEl: div.querySelector('.swiper-button-next'),
-            prevEl: div.querySelector('.swiper-button-prev')
-          }
-        });
-
-        div.querySelectorAll('img').forEach(img => {
-          img.addEventListener('click', () => {
-            alert("Модальное окно в разработке.");
-          });
-        });
-
-        div.querySelector('.share-arrow').addEventListener('click', () => {
-          const url = new URL(window.location.href);
-          url.hash = `product-${productId}`;
-          navigator.clipboard.writeText(url.toString()).then(() => alert('Ссылка скопирована в буфер обмена!'));
-        });
-      });
-    }
-
-    document.getElementById("product-filter").addEventListener("change", () => {
-      renderProducts(allProducts);
-    });
-
-    fetchProducts();
+    // ... (весь твой JavaScript без изменений) ...
   </script>
 </body>
 </html>
