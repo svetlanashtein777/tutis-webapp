@@ -3,72 +3,196 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Telegram Магазин</title>
+  <title>Магазин</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.js"></script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     body {
       margin: 0;
-      padding: 0;
+      padding: 20px;
       background: #f7f8fa;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
+    }
+    h1 {
       text-align: center;
     }
-
-    h1 {
-      color: #222;
-    }
-
-    .welcome {
-      margin-top: 10px;
-      color: #444;
-      font-size: 18px;
-    }
-
-    .btn {
-      margin-top: 30px;
-      padding: 12px 20px;
+    #product-filter {
+      display: block;
+      margin: 10px auto;
+      padding: 8px;
       font-size: 16px;
-      background-color: #2ea6ff;
-      color: white;
-      border: none;
+    }
+    .product {
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 16px;
+      margin: 20px auto;
+      max-width: 500px;
+      background: #fff;
+    }
+    .product img {
+      max-width: 100%;
       border-radius: 10px;
       cursor: pointer;
-      transition: 0.3s;
     }
-
-    .btn:hover {
-      background-color: #1991e6;
+    .sold-label {
+      position: absolute;
+      background: red;
+      color: white;
+      padding: 4px 8px;
+      font-weight: bold;
+      top: 10px;
+      left: 10px;
+      border-radius: 5px;
+    }
+    button.buy-btn {
+      margin-top: 10px;
+      padding: 10px 20px;
+      background: #007aff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button.buy-btn:hover {
+      background: #005fcc;
+    }
+    .share-arrow {
+      text-align: right;
+      font-size: 20px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    #no-products {
+      text-align: center;
+      color: #999;
     }
   </style>
 </head>
 <body>
-  <h1>Добро пожаловать!</h1>
-  <div class="welcome" id="user-info">Загружаем данные...</div>
-
-  <button class="btn" onclick="sayHello()">👋 Сказать привет боту</button>
+  <h1>Каталог товаров</h1>
+  <select id="product-filter">
+    <option value="">Все категории</option>
+    <option value="кольцо">Кольца</option>
+    <option value="серьги">Серьги</option>
+    <option value="браслет">Браслеты</option>
+    <!-- добавь свои категории -->
+  </select>
+  <div id="model-description"></div>
+  <div id="gallery"></div>
+  <div id="no-products" style="display:none;">Нет товаров для отображения.</div>
 
   <script>
-    const tg = window.Telegram.WebApp;
-    tg.expand(); // расширяет окно
+    const API_URL = "https://myshop-backend2.onrender.com/products";
+    const descriptions = {
+      кольцо: "Описание категории Кольца...",
+      серьги: "Описание категории Серьги...",
+      браслет: "Описание категории Браслеты...",
+    };
+    let allProducts = [];
 
-    const user = tg.initDataUnsafe?.user;
-    const userDiv = document.getElementById('user-info');
-
-    if (user) {
-      userDiv.textContent = `Привет, ${user.first_name}! 👋`;
-    } else {
-      userDiv.textContent = 'Вы не авторизованы через Telegram 😢';
+    async function fetchProducts() {
+      const res = await fetch(API_URL);
+      allProducts = await res.json();
+      renderProducts(allProducts);
     }
 
-    function sayHello() {
-      tg.sendData("Пользователь нажал 'Сказать привет'");
-      alert("Данные отправлены в Telegram-бота!");
+    function filterProducts(products, filter) {
+      if (!filter) return products;
+      return products.filter(p => p.name.toLowerCase().includes(filter.toLowerCase()));
     }
+
+    function openModal(images) {
+      const modal = window.open("", "_blank");
+      modal.document.write(images.map(img => `<img src="${img}" style="max-width:100%;margin:10px;">`).join(""));
+    }
+
+    function renderProducts(products) {
+      const filter = document.getElementById("product-filter").value;
+      const filtered = filterProducts(products, filter);
+      const gallery = document.getElementById("gallery");
+      const noProducts = document.getElementById("no-products");
+      const modelDescription = document.getElementById("model-description");
+
+      gallery.innerHTML = "";
+      modelDescription.textContent = descriptions[filter.toLowerCase()] || "";
+      noProducts.style.display = filtered.length === 0 ? "block" : "none";
+
+      filtered.forEach(product => {
+        const isSold = /Продана/i.test(product.description);
+        const productId = product._id || product.id || product.name.replace(/\s+/g, '-').toLowerCase();
+
+        const div = document.createElement("div");
+        div.classList.add("product");
+        div.id = `product-${productId}`;
+        div.innerHTML = `
+          <div class="swiper-container">
+            ${isSold ? `<div class="sold-label">Продана</div>` : ""}
+            <div class="swiper-wrapper">
+              ${product.images.map(img => `<div class="swiper-slide"><img src="${img}" /></div>`).join('')}
+            </div>
+            <div class="swiper-pagination"></div>
+            <div class="swiper-button-next"></div>
+            <div class="swiper-button-prev"></div>
+          </div>
+          <h3>${product.name}</h3>
+          <p>${product.description} ${product.link ? `<a href="${product.link}" target="_blank">Подробнее</a>` : ''}</p>
+          <p><b>Цена:</b> ${product.price} ₽</p>
+          <div class="share-arrow">→</div>
+        `;
+
+        if (!isSold) {
+          const buyButton = document.createElement('button');
+          buyButton.textContent = "Купить";
+          buyButton.className = "buy-btn";
+          buyButton.addEventListener('click', () => {
+            const payload = JSON.stringify({
+              name: product.name,
+              price: product.price,
+              id: productId
+            });
+            if (Telegram.WebApp) {
+              Telegram.WebApp.sendData(payload);
+            } else {
+              alert("Telegram WebApp API недоступен.");
+            }
+          });
+          div.appendChild(buyButton);
+        }
+
+        gallery.appendChild(div);
+
+        new Swiper(div.querySelector('.swiper-container'), {
+          loop: true,
+          pagination: {
+            el: div.querySelector('.swiper-pagination'),
+            clickable: true
+          },
+          navigation: {
+            nextEl: div.querySelector('.swiper-button-next'),
+            prevEl: div.querySelector('.swiper-button-prev')
+          }
+        });
+
+        div.querySelectorAll('img').forEach(img => {
+          img.addEventListener('click', () => openModal(product.images));
+        });
+
+        div.querySelector('.share-arrow').addEventListener('click', () => {
+          const url = new URL(window.location.href);
+          url.hash = `product-${productId}`;
+          navigator.clipboard.writeText(url.toString()).then(() => alert('Ссылка скопирована!'));
+        });
+      });
+    }
+
+    document.getElementById("product-filter").addEventListener("change", () => {
+      renderProducts(allProducts);
+    });
+
+    fetchProducts();
   </script>
 </body>
 </html>
