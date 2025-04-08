@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Telegram Магазин</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #f7f8fa;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      text-align: center;
+    }
+
+    h1 {
+      color: #222;
+    }
+
+    .welcome {
+      margin-top: 10px;
+      color: #444;
+      font-size: 18px;
+    }
+
+    .btn {
+      margin-top: 30px;
+      padding: 12px 20px;
+      font-size: 16px;
+      background-color: #2ea6ff;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .btn:hover {
+      background-color: #1991e6;
+    }
+  </style>
+</head>
+<body>
+  <h1>Добро пожаловать!</h1>
+  <div class="welcome" id="user-info">Загружаем данные...</div>
+
+  <button class="btn" onclick="sayHello()">👋 Сказать привет боту</button>
+
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.expand(); // расширяет окно
+
+    const user = tg.initDataUnsafe?.user;
+    const userDiv = document.getElementById('user-info');
+
+    if (user) {
+      userDiv.textContent = `Привет, ${user.first_name}! 👋`;
+    } else {
+      userDiv.textContent = 'Вы не авторизованы через Telegram 😢';
+    }
+
+    function sayHello() {
+      tg.sendData("Пользователь нажал 'Сказать привет'");
+      alert("Данные отправлены в Telegram-бота!");
+    }
+  </script>
+</body>
+</html>
