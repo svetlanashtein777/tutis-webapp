@@ -27,6 +27,8 @@
       padding: 8px;
       border-radius: 6px;
       font-size: 16px;
+      width: 90%;
+      max-width: 400px;
     }
 
     .swiper-container {
@@ -79,6 +81,7 @@
       padding: 5px 10px;
       font-size: 14px;
       border-radius: 5px;
+      z-index: 2;
     }
 
     .share-arrow {
@@ -96,6 +99,7 @@
 
       h1 {
         font-size: 20px;
+        padding: 0 10px;
       }
 
       h3 {
@@ -104,6 +108,11 @@
 
       .buy-btn {
         font-size: 0.95em;
+        padding: 10px;
+      }
+
+      select {
+        font-size: 14px;
       }
     }
   </style>
@@ -116,12 +125,6 @@
   <div id="model-description"></div>
   <div id="gallery"></div>
   <p id="no-products" style="display:none;">Нет доступных товаров</p>
-
-  <!-- Modal для изображений (можно доработать позже) -->
-  <div id="modal" style="display:none;">
-    <div id="modal-close">×</div>
-    <div id="modal-content"></div>
-  </div>
 
   <script>
     const API_URL = "https://myshop-backend2.onrender.com/products";
@@ -154,10 +157,6 @@
     function filterProducts(products, filter) {
       if (!filter) return products;
       return products.filter(p => p.category === filter);
-    }
-
-    function openModal(images) {
-      // временно отключено
     }
 
     function renderProducts(products) {
@@ -228,7 +227,9 @@
         });
 
         div.querySelectorAll('img').forEach(img => {
-          img.addEventListener('click', () => openModal(product.images));
+          img.addEventListener('click', () => {
+            alert("Модальное окно в разработке.");
+          });
         });
 
         div.querySelector('.share-arrow').addEventListener('click', () => {
